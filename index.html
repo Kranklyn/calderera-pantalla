@@ -3,15 +3,44 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>La Calderera</title>
 <style>
-:root{--bg:#000;--fg:#f3ede2;--mut:#9a9488;--acc:#e0a458;--u:min(1vw,1.6vh)}
+/* ===== COLORES Y TAMAÑO: cambia aquí ===== */
+:root{
+ --bg:#000000;      /* fondo (negro puro = ahorra pantalla AMOLED) */
+ --fg:#f3ede2;      /* texto principal */
+ --mut:#9a9488;     /* texto secundario */
+ --acc:#e0a458;     /* títulos y avisos */
+ --line:#2a2a2a;    /* borde de las tarjetas */
+ --U:min(1vw,1.6vh);/* tamaño base de las letras (sube el número para letras más grandes) */
+}
+@media (orientation:portrait){:root{--U:2.3vw}}
+/* ========================================= */
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden;cursor:none}
-#wrap{height:100%;display:flex;flex-direction:column;padding:calc(var(--u)*3)}
-header{display:flex;justify-content:space-between;align-items:baseline;gap:calc(var(--u)*2)}
-#clock{font-size:calc(var(--u)*9);font-weight:200;letter-spacing:.02em}
-#date{font-size:calc(var(--u)*2.6);color:var(--mut);text-transform:capitalize;text-align:right}
-#temp{font-size:calc(var(--u)*2.6);color:var(--acc);text-align:right}
-main{flex:1;position:relative;margin:calc(var(--u)*2) 0}
+body{--u:var(--U)}
+#wrap{height:100%;display:flex;flex-direction:column;padding:calc(var(--U)*3)}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:calc(var(--U)*2)}
+#clock{font-size:calc(var(--U)*9);font-weight:200;letter-spacing:.02em}
+#date{font-size:calc(var(--U)*2.6);color:var(--mut);text-transform:capitalize;text-align:right}
+#temp{font-size:calc(var(--U)*2.6);color:var(--acc);text-align:right}
+main{flex:1;min-height:0;display:grid;gap:calc(var(--U)*2);margin:calc(var(--U)*2) 0;grid-template-columns:1fr 1fr}
+@media (orientation:portrait){main{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
+/* panel fijo de sensores */
+#side{--u:calc(var(--U)*.8);display:flex;flex-direction:column;justify-content:center;gap:calc(var(--u)*2);text-align:center;border-right:1px solid var(--line);padding-right:calc(var(--U)*2)}
+@media (orientation:portrait){#side{border-right:0;border-bottom:1px solid var(--line);padding:0 0 calc(var(--U)*2)}}
+/* modo "solo": se oculta el panel y la zona rotativa ocupa todo */
+#side .plantas{grid-template-columns:repeat(3,1fr);gap:calc(var(--u)*1.2)}
+#side .pl{padding:calc(var(--u)*1.2)}
+#side .pl b{font-size:calc(var(--u)*5);white-space:nowrap}
+#side .pl span{font-size:calc(var(--u)*2)}
+#side h2{font-size:calc(var(--u)*3.4)}
+#side .big{font-size:calc(var(--u)*2.8)}
+@media (orientation:portrait){#side{--u:calc(var(--U)*.62)}#clock{font-size:calc(var(--U)*7)}#date{font-size:calc(var(--U)*2.4)}}
+@media (orientation:portrait){#stage .pl{padding:calc(var(--u)*1.2)}#stage .pl b{font-size:calc(var(--u)*4.6)}#stage #avisos{font-size:calc(var(--u)*3)}}
+body.solo #side{display:none}
+body.solo main{grid-template-columns:1fr;grid-template-rows:1fr}
+/* zona rotativa */
+#stage{position:relative;--u:calc(var(--U)*.65)}
+body.solo #stage{--u:var(--U)}
 .slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:calc(var(--u)*2);opacity:0;transition:opacity 1.2s;pointer-events:none}
 .slide.on{opacity:1}
 h1{font-size:calc(var(--u)*5.5);font-weight:300;color:var(--acc)}
@@ -19,28 +48,34 @@ h2{font-size:calc(var(--u)*4);font-weight:300;color:var(--acc)}
 p,li{font-size:calc(var(--u)*3);line-height:1.4}
 .big{font-size:calc(var(--u)*4.2)}
 .mut{color:var(--mut)}
-ul{list-style:none;display:flex;flex-direction:column;gap:calc(var(--u)*1.4);max-width:90%}
-#qr{background:#fff;padding:calc(var(--u)*1.5);border-radius:calc(var(--u)*1.5);width:min(calc(var(--u)*30),55vw,45vh);aspect-ratio:1}
+ul{list-style:none;display:flex;flex-direction:column;gap:calc(var(--u)*1.4);max-width:92%}
+#qr{background:#fff;padding:calc(var(--u)*1.5);border-radius:calc(var(--u)*1.5);width:min(calc(var(--u)*30),55vw,40vh);aspect-ratio:1}
 #qr svg{width:100%;height:100%;display:block}
-footer{text-align:center;color:var(--mut);font-size:calc(var(--u)*2.2);min-height:1.4em}
-@media (orientation:landscape){.slide.qr{flex-direction:row;gap:calc(var(--u)*6)}}
-#plantas{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(var(--u)*17),1fr));gap:calc(var(--u)*2);width:94%}
-.pl{border:1px solid #2a2a2a;border-radius:calc(var(--u)*1.5);padding:calc(var(--u)*2)}
-.pl b{display:block;font-size:calc(var(--u)*6);font-weight:300}
+.plantas{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(var(--u)*17),1fr));gap:calc(var(--u)*2);width:94%}
+#side .plantas{width:100%}
+.pl{border:1px solid var(--line);border-radius:calc(var(--u)*1.5);padding:calc(var(--u)*2)}
+.pl b{display:block;font-size:calc(var(--u)*6);font-weight:300;white-space:nowrap}
 .pl span{font-size:calc(var(--u)*2.4);color:var(--mut)}
 .warn{color:var(--acc)}
+footer{text-align:center;color:var(--mut);font-size:calc(var(--U)*2.2);min-height:1.4em}
 </style></head><body><div id="wrap">
 <header><div id="clock">--:--</div><div><div id="date"></div><div id="temp"></div></div></header>
 <main>
- <section class="slide qr on">
-  <div><h1>Bienvenidos a La Calderera</h1><p class="mut">Escanea para hablar con el asistente de la casa<br>calefacción, normas, info y más</p></div>
-  <div id="qr"><svg viewBox="0 0 35 35" shape-rendering="crispEdges" class="segno"><path fill="#fff" d="M0 0h35v35h-35z"/><path class="qrline" stroke="#000" d="M3 3.5h7m2 0h3m1 0h5m4 0h7m-29 1h1m5 0h1m3 0h1m2 0h1m5 0h1m2 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h3m1 0h5m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h2m1 0h2m1 0h1m2 0h2m2 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h2m3 0h1m3 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m1 0h1m1 0h1m1 0h1m1 0h1m4 0h2m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-20 1h1m1 0h1m1 0h1m3 0h1m1 0h2m-20 1h1m2 0h1m1 0h1m1 0h2m2 0h5m1 0h1m1 0h2m1 0h2m1 0h1m-23 1h1m2 0h1m2 0h1m1 0h2m1 0h2m1 0h1m2 0h4m2 0h2m-28 1h3m1 0h2m1 0h2m1 0h1m4 0h3m2 0h1m6 0h1m-26 1h3m1 0h1m2 0h4m1 0h1m1 0h3m1 0h1m3 0h1m1 0h2m-28 1h3m2 0h1m3 0h3m1 0h7m2 0h1m1 0h1m2 0h1m-29 1h1m1 0h3m3 0h1m2 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m-29 1h4m1 0h2m3 0h3m2 0h1m1 0h1m3 0h2m1 0h1m3 0h1m-29 1h1m2 0h2m3 0h2m4 0h2m1 0h1m2 0h2m1 0h1m1 0h1m2 0h1m-29 1h2m4 0h1m3 0h2m1 0h1m4 0h4m-22 1h1m1 0h1m4 0h8m1 0h3m3 0h3m1 0h1m1 0h1m-27 1h3m1 0h1m1 0h1m1 0h1m2 0h2m1 0h1m1 0h1m1 0h1m2 0h2m3 0h1m-27 1h1m1 0h2m3 0h6m2 0h4m2 0h1m1 0h1m1 0h2m-29 1h2m1 0h4m2 0h1m1 0h1m1 0h3m4 0h6m1 0h2m-21 1h4m4 0h3m1 0h1m3 0h1m1 0h1m1 0h1m-29 1h7m2 0h1m1 0h5m2 0h3m1 0h1m1 0h1m3 0h1m-29 1h1m5 0h1m4 0h1m1 0h1m1 0h2m2 0h2m3 0h2m-26 1h1m1 0h3m1 0h1m1 0h3m3 0h1m1 0h1m2 0h6m-25 1h1m1 0h3m1 0h1m4 0h1m5 0h2m4 0h1m2 0h2m-28 1h1m1 0h3m1 0h1m2 0h3m1 0h3m1 0h5m3 0h1m1 0h2m-29 1h1m5 0h1m1 0h3m4 0h3m1 0h1m1 0h3m1 0h1m1 0h2m-29 1h7m3 0h1m2 0h2m2 0h1m2 0h2m2 0h1m2 0h1"/></svg></div>
- </section>
- <section class="slide" id="sens"><h2>🌡️ La casa ahora</h2><div id="plantas"></div><p id="avisos" class="big"></p></section>
- <section class="slide"><h2>📶 WiFi</h2><p class="big">WIFI-La Calderera</p><p class="mut">Red abierta, sin contraseña</p></section>
- <section class="slide"><h2>🕐 Horarios</h2><p class="big">Entrada desde las 13:00</p><p class="big">Salida antes de las 10:00</p></section>
- <section class="slide"><h2>Normas de la casa</h2><ul><li>🔥 Deja limpia la barbacoa</li><li>🚬 Usa los ceniceros en el exterior</li><li>🗑️ Basura al contenedor de la entrada del polígono; nunca bolsas fuera (hay animales)</li><li>🚪 Cierra puertas y ventanas con la calefacción en marcha</li></ul></section>
- <section class="slide"><h2>🚨 Emergencias</h2><p class="big">112</p><p class="mut">Para cualquier otra cosa, escribe al bot o contacta con los anfitriones</p></section>
+ <!-- ===== PANEL FIJO: siempre visible ===== -->
+ <aside id="side"><h2>🌡️ La casa ahora</h2><div class="plantas" id="plantasMini"></div><p class="big" id="avisosMini"></p></aside>
+ <!-- ===== PANTALLAS ROTATIVAS: añade, quita o reordena bloques <section> ===== -->
+ <div id="stage">
+  <section class="slide on">
+   <div><h1>Bienvenidos a La Calderera</h1><p class="mut">Escanea para hablar con el asistente de la casa<br>calefacción, normas, info y más</p></div>
+   <div id="qr"><svg viewBox="0 0 35 35" shape-rendering="crispEdges" class="segno"><path fill="#fff" d="M0 0h35v35h-35z"/><path class="qrline" stroke="#000" d="M3 3.5h7m2 0h3m1 0h5m4 0h7m-29 1h1m5 0h1m3 0h1m2 0h1m5 0h1m2 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h3m1 0h5m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h2m1 0h2m1 0h1m2 0h2m2 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h2m3 0h1m3 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m1 0h1m1 0h1m1 0h1m1 0h1m4 0h2m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-20 1h1m1 0h1m1 0h1m3 0h1m1 0h2m-20 1h1m2 0h1m1 0h1m1 0h2m2 0h5m1 0h1m1 0h2m1 0h2m1 0h1m-23 1h1m2 0h1m2 0h1m1 0h2m1 0h2m1 0h1m2 0h4m2 0h2m-28 1h3m1 0h2m1 0h2m1 0h1m4 0h3m2 0h1m6 0h1m-26 1h3m1 0h1m2 0h4m1 0h1m1 0h3m1 0h1m3 0h1m1 0h2m-28 1h3m2 0h1m3 0h3m1 0h7m2 0h1m1 0h1m2 0h1m-29 1h1m1 0h3m3 0h1m2 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m-29 1h4m1 0h2m3 0h3m2 0h1m1 0h1m3 0h2m1 0h1m3 0h1m-29 1h1m2 0h2m3 0h2m4 0h2m1 0h1m2 0h2m1 0h1m1 0h1m2 0h1m-29 1h2m4 0h1m3 0h2m1 0h1m4 0h4m-22 1h1m1 0h1m4 0h8m1 0h3m3 0h3m1 0h1m1 0h1m-27 1h3m1 0h1m1 0h1m1 0h1m2 0h2m1 0h1m1 0h1m1 0h1m2 0h2m3 0h1m-27 1h1m1 0h2m3 0h6m2 0h4m2 0h1m1 0h1m1 0h2m-29 1h2m1 0h4m2 0h1m1 0h1m1 0h3m4 0h6m1 0h2m-21 1h4m4 0h3m1 0h1m3 0h1m1 0h1m1 0h1m-29 1h7m2 0h1m1 0h5m2 0h3m1 0h1m1 0h1m3 0h1m-29 1h1m5 0h1m4 0h1m1 0h1m1 0h2m2 0h2m3 0h2m-26 1h1m1 0h3m1 0h1m1 0h3m3 0h1m1 0h1m2 0h6m-25 1h1m1 0h3m1 0h1m4 0h1m5 0h2m4 0h1m2 0h2m-28 1h1m1 0h3m1 0h1m2 0h3m1 0h3m1 0h5m3 0h1m1 0h2m-29 1h1m5 0h1m1 0h3m4 0h3m1 0h1m1 0h3m1 0h1m1 0h2m-29 1h7m3 0h1m2 0h2m2 0h1m2 0h2m2 0h1m2 0h1"/></svg></div>
+  </section>
+  <!-- Pantalla completa de sensores: bórrala si no la quieres -->
+  <section class="slide" id="sens"><h2>🌡️ La casa ahora</h2><div class="plantas" id="plantas"></div><p class="big" id="avisos"></p></section>
+  <section class="slide"><h2>📶 WiFi</h2><p class="big">WIFI-La Calderera</p><p class="mut">Red abierta, sin contraseña</p></section>
+  <section class="slide"><h2>🕐 Horarios</h2><p class="big">Entrada desde las 13:00</p><p class="big">Salida antes de las 10:00</p></section>
+  <section class="slide"><h2>Normas de la casa</h2><ul><li>🔥 Deja limpia la barbacoa</li><li>🚬 Usa los ceniceros en el exterior</li><li>🗑️ Basura al contenedor de la entrada del polígono; nunca bolsas fuera (hay animales)</li><li>🚪 Cierra puertas y ventanas con la calefacción en marcha</li></ul></section>
+  <section class="slide"><h2>🚨 Emergencias</h2><p class="big">112</p><p class="mut">Para cualquier otra cosa, escribe al bot o contacta con los anfitriones</p></section>
+ </div>
 </main>
 <footer id="foot"></footer></div>
 <script>
@@ -53,23 +88,28 @@ async function weather(){try{
  const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.59&longitude=-3.81&current=temperature_2m');
  const j=await r.json();$('temp').textContent='Fuera: '+Math.round(j.current.temperature_2m)+' °C';}catch(e){}}
 weather();setInterval(weather,900000);
+
 const S=[...document.querySelectorAll('.slide')];let i=0,sensOk=false;
-async function sens(){try{
- const j=await (await fetch('estado.json?t='+Date.now())).json();
- if((Date.now()-new Date(j.actualizado))/60000>15){sensOk=false;return}
- const P=$('plantas');P.textContent='';
+function modo(){document.body.classList.toggle('solo',!sensOk||S[i].id==='sens')}
+function pintar(P,A,j){
+ P.textContent='';
  j.plantas.forEach(p=>{const d=document.createElement('div');d.className='pl';
   const b=document.createElement('b');b.textContent=(p.temp==null?'--':p.temp)+' °C';
   const n=document.createElement('span');n.textContent=p.nombre+(p.hum==null?'':' · '+Math.round(p.hum)+'% hum.');
   d.append(b,n);P.append(d)});
- const ab=[...j.abiertas.ventanas,...j.abiertas.puertas],A=$('avisos');
+ const ab=[...j.abiertas.ventanas,...j.abiertas.puertas];
  A.className='big'+(ab.length?' warn':'');
- A.textContent=ab.length?'⚠️ Abierto: '+ab.join(', '):'✅ Todo cerrado';
- sensOk=true}catch(e){sensOk=false}}
+ A.textContent=ab.length?'⚠️ Abierto: '+ab.join(', '):'✅ Todo cerrado';}
+async function sens(){try{
+ const j=await (await fetch('estado.json?t='+Date.now())).json();
+ if((Date.now()-new Date(j.actualizado))/60000>15){sensOk=false;modo();return}
+ pintar($('plantas'),$('avisos'),j);pintar($('plantasMini'),$('avisosMini'),j);
+ sensOk=true}catch(e){sensOk=false}modo()}
 sens();setInterval(sens,120000);
-setInterval(()=>{S[i].classList.remove('on');do{i=(i+1)%S.length}while(S[i].id==='sens'&&!sensOk);S[i].classList.add('on');},12000);
+setInterval(()=>{S[i].classList.remove('on');do{i=(i+1)%S.length}while(S[i].id==='sens'&&!sensOk);S[i].classList.add('on');modo()},12000);
+
 const F=['Disfruta de la calma','Gracias por cuidar la casa','Descansa, estás en La Calderera','Las mejores charlas son junto al fuego'];
 let f=0;function foot(){$('foot').textContent=F[f++%F.length]}foot();setInterval(foot,30000);
 // desplazamiento anti-quemado (AMOLED)
-setInterval(()=>{const w=$('wrap');w.style.transform=`translate(${Math.random()*10-5}px,${Math.random()*10-5}px)`},60000);
+setInterval(()=>{$('wrap').style.transform=`translate(${Math.random()*10-5}px,${Math.random()*10-5}px)`},60000);
 </script></body></html>
