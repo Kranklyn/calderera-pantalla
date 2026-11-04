@@ -10,9 +10,9 @@
  --mut:#9a9488;     /* texto secundario */
  --acc:#e0a458;     /* títulos y avisos */
  --line:#2a2a2a;    /* borde de las tarjetas */
- --U:min(1vw,1.6vh);/* tamaño base de las letras (sube el número para letras más grandes) */
+ --U:min(1vw,1.5vh);/* tamaño base de las letras (sube el número para letras más grandes) */
 }
-@media (orientation:portrait){:root{--U:2.3vw}}
+@media (orientation:portrait){:root{--U:min(2.3vw,1.05vh)}}
 /* ========================================= */
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden;cursor:none}
@@ -29,10 +29,15 @@ main{flex:1;min-height:0;display:grid;gap:calc(var(--U)*2);margin:calc(var(--U)*
 #side .plantas{width:100%;grid-template-columns:repeat(3,1fr);gap:calc(var(--u)*1.2)}
 #side .pl{padding:calc(var(--u)*1.2)}
 #side .pl b{font-size:calc(var(--u)*5)}
-#side .pl span{font-size:calc(var(--u)*2)}
+#side .pl span{font-size:calc(var(--u)*2.1)}
 #side h2{font-size:calc(var(--u)*3.4)}
 #side .avisos{font-size:calc(var(--u)*2.8)}
 @media (orientation:portrait){#side{--u:calc(var(--U)*.62)}#clock{font-size:calc(var(--U)*7)}#date{font-size:calc(var(--U)*2.4)}#stage .pl{padding:calc(var(--u)*1.2)}#stage .pl b{font-size:calc(var(--u)*4.6)}#stage .avisos{font-size:calc(var(--u)*2.4)}}
+body.solo #stage .pl{padding:calc(var(--u)*1.1)}
+body.solo #stage .pl b{font-size:calc(var(--u)*4.2)}
+body.solo #stage .pl span{font-size:calc(var(--u)*2.1)}
+body.solo #stage .plantas{gap:calc(var(--u)*1.2)}
+body.solo #stage .avisos{font-size:calc(var(--u)*2.3)}
 body.solo #side{display:none}
 body.solo main{grid-template-columns:1fr;grid-template-rows:1fr}
 #stage{position:relative;--u:calc(var(--U)*.65)}
@@ -59,6 +64,10 @@ body.solo .pl{padding:calc(var(--u)*1.3)}
 body.solo .pl b{font-size:calc(var(--u)*5)}
 body.solo #stage .avisos{font-size:calc(var(--u)*2.6)}
 .warn{color:var(--acc)}
+.viejo{opacity:.45}
+.pl .conf{color:var(--fg);margin-top:.15em}
+.pl .conf:empty{display:none}
+.pl span{display:block}
 .dias{grid-template-columns:repeat(4,1fr);gap:calc(var(--u)*1.2)}
 .dias .pl{padding:calc(var(--u)*1.2)}
 .dias .pl b{font-size:calc(var(--u)*5)}
@@ -108,7 +117,7 @@ tick();setInterval(tick,10000);
 const S=[...document.querySelectorAll('.slide')];let i=0;
 const ok={sens:false,salida:false,tiempo:false};
 const disponible=s=>!s.dataset.req||ok[s.dataset.req];
-function modo(){document.body.classList.toggle('solo',!ok.sens||S[i].id==='sens')}
+function modo(){document.body.classList.toggle('solo',S[i].id==='sens')}
 
 /* ---- tiempo, amanecer/atardecer y luna (Open-Meteo, sin clave) ---- */
 const EMO=c=>c===0?'☀️':c<=2?'🌤️':c===3?'☁️':c<=48?'🌫️':c<=57?'🌦️':c<=67?'🌧️':c<=77?'❄️':c<=82?'🌦️':c<=86?'❄️':'⛈️';
@@ -132,15 +141,24 @@ weather();setInterval(weather,900000);
 
 /* ---- sensores, calefacción y reservas (estado.json que sube el bot) ---- */
 function linea(t,warn){const d=document.createElement('div');if(warn)d.className='warn';d.textContent=t;return d}
-function pintar(P,A,j){
- P.textContent='';
- j.plantas.forEach(p=>{const d=document.createElement('div');d.className='pl';
+function hace(m){return m<120?Math.round(m)+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' días'}
+function confort(t,h){
+ if(t==null)return '';
+ let c=t<16?'🥶 Frío':t<19?'🙂 Fresco':t<=24?'😊 Confort':t<=27?'😅 Cálido':'🥵 Calor';
+ if(h!=null){if(h<30)c+=' · aire seco';else if(h>65)c+=' · húmedo'}
+ return c}
+const PLANTAS=['Planta baja','Planta 1','Planta 2'];
+function span(t){const e=document.createElement('span');e.textContent=t;return e}
+function pintar(P,A,j,edad){
+ P.textContent='';P.classList.toggle('viejo',edad>0);
+ PLANTAS.forEach(nom=>{const p=j.plantas.find(x=>x.nombre===nom)||{};const d=document.createElement('div');d.className='pl';
   const b=document.createElement('b');b.textContent=(p.temp==null?'--':p.temp)+' °C';
-  const n=document.createElement('span');n.textContent=p.nombre+(p.hum==null?'':' · '+Math.round(p.hum)+'% hum.');
-  d.append(b,n);P.append(d)});
+  d.append(b,span(nom),span(p.temp==null?'sin datos':'💧 '+(p.hum==null?'--':Math.round(p.hum))+' %'));
+  const c=span(confort(p.temp,p.hum));c.className='conf';d.append(c);P.append(d)});
+ A.textContent='';
+ if(edad>0){A.append(linea('⚠️ Sin datos recientes · última lectura hace '+hace(edad),true));return}
  const ab=[...j.abiertas.ventanas,...j.abiertas.puertas];
  const cal=j.calefaccion||{},enc=cal.encendida===true;
- A.textContent='';
  if(enc&&ab.length){
   A.append(linea('⚠️ Abierto: '+ab.join(', '),true),linea('🔥 Calefacción encendida con ventanas o puertas abiertas: ciérralas para ahorrar',true));
  }else{
@@ -150,9 +168,14 @@ function pintar(P,A,j){
  }}
 async function sens(){try{
  const j=await (await fetch('estado.json?t='+Date.now())).json();
- if((Date.now()-new Date(j.actualizado))/60000>15){ok.sens=false;ok.salida=false;modo();return}
- pintar($('plantas'),$('avisos'),j);pintar($('plantasMini'),$('avisosMini'),j);
- ok.sens=true;ok.salida=!!(j.reservas&&j.reservas.salida_hoy)}catch(e){ok.sens=false;ok.salida=false}modo()}
+ const min=(Date.now()-new Date(j.actualizado))/60000,edad=min>15?min:0;
+ pintar($('plantas'),$('avisos'),j,edad);pintar($('plantasMini'),$('avisosMini'),j,edad);
+ ok.sens=!edad;ok.salida=!edad&&!!(j.reservas&&j.reservas.salida_hoy)
+}catch(e){
+ ok.sens=false;ok.salida=false;
+ pintar($('plantasMini'),$('avisosMini'),{plantas:[],abiertas:{ventanas:[],puertas:[]}},0);
+ $('plantasMini').classList.add('viejo');$('avisosMini').textContent='⏳ Esperando datos de los sensores…'}
+ modo()}
 sens();setInterval(sens,120000);
 
 /* ---- cuenta atrás de salida (10:00) ---- */
